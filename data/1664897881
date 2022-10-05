@@ -1,0 +1,4 @@
+* lua-leveldb 구글에서 만든 key, value 기반의 경량 데이터 베이스
+https://opensourcelibs.com/lib/lua-leveldb
+https://github.com/marcopompili/lua-leveldb
+lua용 바인딩 database 
