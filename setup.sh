@@ -10,7 +10,7 @@ show_help() {
 
   [ Usage ]
 
-  $(basename $0) luajit shell --- create shellscript for luajit
+  ./$(basename $0) install --- create shellscript for luajit
   
   [ Requirement ]
 
@@ -31,6 +31,7 @@ check_luajit() {
 
 shell_luajit() {
   check_luajit
+  mkdir -p ${PREFIX}/bin
   cat<<EOF  > ${PREFIX}/bin/${PROGRAM}
 #!/bin/sh
 export LUA_PATH="${PREFIX}/lib/?.lua"
@@ -43,8 +44,7 @@ EOF
 }
 
 # ## Main
-[ $# -ne 2 ] && show_help && exit
-  
-[ $1 == 'luajit' ]  && [ $2 == 'shell' ] && shell_luajit && exit
+[ $# -ne 1 ] && show_help && exit
+[ $1 == 'install' ]  && shell_luajit && exit
 
 show_help

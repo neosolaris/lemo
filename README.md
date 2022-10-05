@@ -21,7 +21,7 @@
 $ git clone https://github.com/neosolaris/lemo.git
 $ cd lemo/
 $ ./setup.sh --help
-$ ./setup.sh luajit shell  # create shellscript for luajit
+$ ./setup.sh install # create shellscript command to 'bin/lemo'
 $ export PATH=$PATH:<your_lemo_path>/bin
 $ lemo -h
 ```
@@ -39,7 +39,7 @@ Usage: lemo v0.1
    w:week m:month y:year a:all
 -s|search keyword[s]         -- keyword[s] search: and-search
 -v|view id[s]                -- view id[s]
--h|help
+-h|help                      -- this help
 ```
 
 ## TODO
