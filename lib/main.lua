@@ -9,6 +9,7 @@
 -- * 메모파일 암호화: 아주 나중에... 
 -- * 구글드라이브에 올리기: 암호폴더에 백업하기
 -- * do_list(): 추가 옵션 기능 구현: today, yesterday...
+-- * do_search(): 대소문자 구별없이 검색
 -- * [x] 22.10.05: EDITOR 변수에 따라 do_edit()에서 처리하도록 설정
 -- * [x] 22.10.05: 코드 정리
 -- * [x] 22.10.05: 깃허브에 올리기: 소스만 올리고 관리
@@ -55,6 +56,7 @@ local version = '0.1'
 local function help()
   print('Usage: '..progname..' "strings"')
   print()
+  print('-a|add "strings"             add memo')
   print('-d|delete id[s]              delete id[s]')
   print('-e|edit id[s]                edit id[s]')
   print('-l|list [d|dd|ddd|w|m|y|a]   list')
@@ -71,30 +73,25 @@ local function print_title(title, sub)
   local t = string.lower(title)
   if t == 'search' then
     icon = ''
-  elseif t == 'searchall' then
-    icon = ''
   elseif t == 'list' then
     icon = ''
-  elseif t == 'listall' then
-    icon = ''
-  elseif t == 'github' then
-    icon = ''
   elseif t == 'add' then
     icon = ''
+  elseif t == 'edit' then
+    icon = ''
   elseif t == 'delete' then
     icon = ''
-  elseif t == 'backup' then
-    icon = ''
-  elseif t == 'restore' then
-    icon = ''
   elseif t == 'view' then
     icon = ''
   else
     icon = ''
   end
-  local str = string.format('﮶_%s_%s %s %s ﰲ %s', progname, version, icon, title, sub)
-  --m.cprint('Memo '..version..icon..':'..title..' ﰲ '..sub, 'cyan')
-  m.cprint(str, 'cyan')
+  --local str = string.format('﮶_%s_%s %s %s ﰲ %s', progname, version, icon, title, sub)
+  local lua = m.cstr('','lred')
+  local ptitle = m.cstr(''..progname..'_'..version, 'lpurple')
+  local mtitle = m.cstr(icon..' '..title..' ﰲ '..sub, 'lcyan')
+  --local str = string.format(' _%s_%s %s %s ﰲ %s', progname, version, icon, title, sub)
+  print(string.format('%s %s %s', lua, ptitle, mtitle))
 end
 
 -- time() 형식의 시간을 date로 변환
@@ -134,27 +131,35 @@ local function get_flist(dir)
       if tonumber(f) then table.insert(flist, f) end
     end
   end
+  -- table sort for flist before return
+  table.sort(flist)
   return flist
 end
 
 
 --## do functions
 
--- github upload
-local function do_git()
-  print_title('Github')
-  os.execute("cd "..PREFIX.." && git add . && git commit -a -m \"update files\" && git push -u origin main")
-end
 -- 메모를 추가하는 함수: readlines 추가 기능 필요
-local function do_add()
-  -- os.time()으로 파일을 생성, 그럴리 없지만 파일이 있다면 append
-  -- 빠르게 메모하는 것이므로 한 줄 또는 서너줄을 입력한다.
-  -- 아무래도 편집하는 것이 조금 불편하다. 개선이 필요한 부분
-  local fname = PREFIX_DATA..'/'..os.time()
-  local file = assert(io.open(fname,'a+'))
-  if file:write(io.read('*a')) then
+local function do_add(args)
+  args = args or {}
+  local memo = ''
+  -- check whether args is
+  if not next(args) then
+    memo = io.read('*a')
+  else
+    for i,a in pairs(args) do
+      if i ~= 1 then a = ' '..a end
+      memo = memo..a
+    end
+  end
+  -- write memo to file
+  local fname = os.time()
+  local file = assert(io.open(PREFIX_DATA..'/'..fname,'a+'))
+  if file:write(memo) then
     file:close()
-    print(fname..'is added!')
+    print('-> add: '..fname..' is added!')
+  else
+    print('-> add: '..fname..' is failed!')
   end
 end
 
@@ -236,6 +241,7 @@ end
 
 
 -- 한 파일에 해당 키워드가 있는 라인을 테이블로 리턴
+-- 해결과제: 대소문자 구별없이 검색시 라인 컬러표시 안됨
 local function match_lines(f, keys)
   local mlines = {}
   local ct = {}  -- count table for keys
@@ -246,6 +252,7 @@ local function match_lines(f, keys)
     -- check iskey is true in keys loop
     local iskey = false
     for _,key in pairs(keys) do
+      --if string.match(string.lower(line), string.lower(key)) then
       if string.match(line, key) then
         iskey = true
         ct[key] = ct[key] + 1
@@ -274,7 +281,8 @@ local function do_search(keys)
     local lines = match_lines(PREFIX_DATA..'/'..f, keys)
     if lines then
       tot = tot + 1
-      local str = string.format(' '..i..' '..f..' ('..time2date(f)..')')
+      --local str = string.format(' '..i..' '..f..' ('..time2date(f)..')')
+      local str = string.format(' %d %s (%s)', i, f, time2date(f))
       m.cprint(str, 'yellow')
       for _, line in pairs(lines) do
         print('  '..line)
@@ -307,7 +315,7 @@ end
 -------------------------------------------------------------------------
 
 if #arg == 0 then
-  do_add()
+  do_add(args)
   os.exit()
 end
 
@@ -316,8 +324,11 @@ opt, args = m.getopt()
 
 
 -- execute function in case
+print()
 if opt == '-h' or opt == 'help' or opt == 'h' then
   help()
+elseif opt == '-a' or opt == 'add' or opt == 'a' then
+  do_add(args)
 elseif opt == '-d' or opt == 'delete' or opt == 'd' then
   do_delete(args)
 elseif opt == '-e' or opt == 'edit' or opt == 'e' then
@@ -331,3 +342,4 @@ elseif opt == '-v' or opt == 'view' or opt == 'v' then
 else
   help()
 end
+print()
