@@ -188,8 +188,8 @@ end
 local function do_edit(ids)
   --ids = ids or {os.date('%y%m%d')} -- table ids는 값이 없을 경우 아래와 같이 해야 함
   if not next(ids) then
-    -- 입력한 Id가 없다면 현재시간으로 메모파일을 만들고 nvim으로 편집 후 종료
-    assert(os.execute('nvim '..PREFIX_DATA..'/'..os.time()))
+    -- 입력한 Id가 없다면 현재시간으로 메모파일을 만들고 vim으로 편집 후 종료
+    assert(os.execute('vim '..PREFIX_DATA..'/'..os.time()))
     return
   end
   local match = 0
