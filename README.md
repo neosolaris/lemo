@@ -31,13 +31,14 @@ $ lemo -h
 ```console
 Usage: lemo v0.1
 
--d|delete id[s]              delete id[s]
--e|edit id[s]                edit id[s]
--l|list [d|dd|ddd|w|m|y|a]   list
+-a|add "strings"             -- add memo
+-d|delete id[s]              -- delete id[s]
+-e|edit id[s]                -- edit id[s]
+-l|list [d|dd|ddd|w|m|y|a]   -- list
    d:today dd:yesterday ddd:day before yesterday
    w:week m:month y:year a:all
--s|search keyword[s]         keyword[s] search: and-search
--v|view id[s]                view id[s]
+-s|search keyword[s]         -- keyword[s] search: and-search
+-v|view id[s]                -- view id[s]
 -h|help
 ```
 

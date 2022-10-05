@@ -1,5 +1,5 @@
 #!/usr/bin/env luajit
--- memo 관리 프로그램: memo
+-- Luajit memo 관리 프로그램: memo
 -- first version: 0.1 (22-10-05)
 
 -- ## TODO
@@ -7,14 +7,15 @@
 -- * mjlib 모듈에 함수부분 모두 코멘트: 코딩시 vim에서 함수 설명이 보이게 된다.
 -- * 기본 테스트하기
 -- * 메모파일 암호화: 아주 나중에... 
--- * 깃허브에 올리기: 소스만 올리고 관리
 -- * 구글드라이브에 올리기: 암호폴더에 백업하기
--- * 코딩 정리
 -- * do_list(): 추가 옵션 기능 구현: today, yesterday...
+-- * [x] 22.10.05: EDITOR 변수에 따라 do_edit()에서 처리하도록 설정
+-- * [x] 22.10.05: 코드 정리
+-- * [x] 22.10.05: 깃허브에 올리기: 소스만 올리고 관리
 -- * [x] 22.10.05: fileinfo(): memo 한 줄 보여주기 함수 구현
--- * [x] 22.10.05: do_delete(): 기능 구현
--- * [x] 22.10.05: do_list(): 기본 구현, 표시 방법 정리
--- * [x] 22.10.05: do_search(): 한줄에서 두개의 다른 키워드가 검색될 경우 라인 중복 문제
+-- * [x] 22.10.04: do_delete(): 기능 구현
+-- * [x] 22.10.04: do_list(): 기본 구현, 표시 방법 정리
+-- * [x] 22.10.04: do_search(): 한줄에서 두개의 다른 키워드가 검색될 경우 라인 중복 문제
 -- * [x] 22.10.04: help 수정
 --
 -- ## NOTICE
@@ -32,7 +33,6 @@
 -- * 바이너리 직접실행의 경우에는 쉘에서 환경변수를 잡고 설정파일도 만들어야 한다.
 -- * 백업할 파일이 심볼릭 링크라면 업데이트 정보를 확인할 수 없다.
 
-
 --## Require
 
 local m = require'mjlib'
@@ -41,6 +41,8 @@ local m = require'mjlib'
 local HOSTNAME = m.gethostname()
 local PREFIX = os.getenv('MEMO')
 if not PREFIX then PREFIX = m.prefix(arg[0]) end
+local EDITOR = os.getenv('EDITOR')
+if not EDITOR then EDITOR = 'vim' end
 local PREFIX_DATA = PREFIX..'/data'
 local DBFILE = PREFIX_DATA..'/memo.db'
 local progname = m.basename(PREFIX)
@@ -188,8 +190,8 @@ end
 local function do_edit(ids)
   --ids = ids or {os.date('%y%m%d')} -- table ids는 값이 없을 경우 아래와 같이 해야 함
   if not next(ids) then
-    -- 입력한 Id가 없다면 현재시간으로 메모파일을 만들고 vim으로 편집 후 종료
-    assert(os.execute('vim '..PREFIX_DATA..'/'..os.time()))
+    -- 입력한 Id가 없다면 현재시간으로 메모파일을 만들고 nvim으로 편집 후 종료
+    assert(os.execute(EDITOR..' '..PREFIX_DATA..'/'..os.time()))
     return
   end
   local match = 0
