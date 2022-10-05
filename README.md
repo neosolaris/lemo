@@ -47,6 +47,6 @@ Usage: lemo v0.1
 ## TODO
 
 * Add mode: readlines support
-* List mode: d, dd, etc options
+* List mode: d, dd, etc options support
 * search mode: ignorecase support
-* Security: file encrypt
+* Security: memo file encryption support
