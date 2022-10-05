@@ -2,11 +2,11 @@
 
 ## Intro
 
-* Small luajit script
-* Linux base command line note program
 * Quick note and search
-* File based memo database system: `data/<time>`
-* Fancy display
+* Small luajit script program
+* Linux base command line memo program
+* File based memo database system: `PREFIX/data/<time>`
+* Fancy Nerd font icons and colored terminal display
 
 ## Requirement
 
@@ -44,5 +44,5 @@ Usage: lemo v0.1
 
 ## TODO
 
-* [] ADD: readlines support
-* [] LIST: d, dd option support
+* ADD: readlines support
+* LIST: d, dd, etc options
