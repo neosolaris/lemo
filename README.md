@@ -7,6 +7,8 @@
 * Linux base command line memo program
 * File based memo database system: `PREFIX/data/<time>`
 * Fancy Nerd font icons and colored terminal display
+* No dependency except `luajit` and `vim`
+* Portable
 
 ## Requirement
 
@@ -44,5 +46,7 @@ Usage: lemo v0.1
 
 ## TODO
 
-* ADD: readlines support
-* LIST: d, dd, etc options
+* Add mode: readlines support
+* List mode: d, dd, etc options
+* search mode: ignorecase support
+* Security: file encrypt
