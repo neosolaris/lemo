@@ -29,7 +29,7 @@ $ lemo -h
 ## Usage
 
 ```console
-Usage: memo "strings"
+Usage: lemo v0.1
 
 -d|delete id[s]              delete id[s]
 -e|edit id[s]                edit id[s]
