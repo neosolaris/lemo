@@ -305,7 +305,13 @@ local function do_search(keys)
       end
     end
   end
-  print_title('search', string.format('tot:'..tot))
+  -- keyword info sum: input keywords to allkey str
+  local allkey = ''
+  for i,k in pairs(keys) do
+    if i == 1 then allkey = k
+    else allkey = allkey..' & '..k end
+  end
+  print_title('search', '['..allkey..'] total:'..tot)
 end
 
 -- 메모 보기
