@@ -33,20 +33,6 @@ local version = '0.1'
 --print(MCONF, MCONF_DATA)
 
 --## under functions
-
--- help 도움말
-local function help()
-  print('Usage: '..progname..' "strings"')
-  print()
-  print('-a|add "strings"             -- add memo')
-  print('-d|delete id[s]              -- delete id[s]')
-  print('-e|edit id[s]                -- edit id[s]')
-  print('-l|list [d|w|m|y|a]          -- list')
-  print('   d:today w:week m:month y:year a:all')
-  print('-s|search keyword[s]         -- keyword[s] search: and-search')
-  print('-v|view id[s]                -- view id[s]')
-end
-
 -- 출력 마지막에 결과를 표시
 local function print_title(title, sub)
   if not sub then sub = '' end
@@ -54,6 +40,8 @@ local function print_title(title, sub)
   local t = string.lower(title)
   if t == 'search' then
     icon = ''
+  elseif t == 'help' then
+    icon = ''
   elseif t == 'list' then
     icon = ''
   elseif t == 'add' then
@@ -74,6 +62,20 @@ local function print_title(title, sub)
   --local str = string.format(' _%s_%s %s %s ﰲ %s', progname, version, icon, title, sub)
   print(string.format('%s %s %s', lua, ptitle, mtitle))
 end
+
+-- help 도움말
+local function help()
+  m.cprint('Usage: '..progname..' "strings"', 'lyellow')
+  print('  -a|add "strings"             -- add memo')
+  print('  -d|delete id[s]              -- delete id[s]')
+  print('  -e|edit id[s]                -- edit id[s]')
+  print('  -l|list [d|w|m|y|a]          -- list')
+  print('           d:today w:week m:month y:year a:all')
+  print('  -s|search keyword[s]         -- keyword[s] search: and-search')
+  print('  -v|view id[s]                -- view id[s]')
+  print_title('help','Console Memo Powered by LuaJit')
+end
+
 
 -- time() 형식의 시간을 date로 변환
 local function time2date(time)
