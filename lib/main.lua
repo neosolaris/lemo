@@ -1,14 +1,11 @@
 #!/usr/bin/env luajit
--- Luajit memo 관리 프로그램: memo
--- first version: 0.1 (22-10-05)
+-- Luajit console memo program
+-- update version: 0.1 (22-10-07)
+-- first version: 0.1beta (22-10-05)
 
 -- ## TODO
--- * list와 search시 여러 표시(오늘날짜,기타정보)를 주어 편리를 제공한다.
--- * mjlib 모듈에 함수부분 모두 코멘트: 코딩시 vim에서 함수 설명이 보이게 된다.
--- * 기본 테스트하기
 -- * 메모파일 암호화: 아주 나중에... 
--- * 구글드라이브에 올리기: 암호폴더에 백업하기
--- * do_list(): 추가 옵션 기능 구현: today, yesterday...
+-- * [x] 22.10.07: do_list(): 추가 옵션 기능 구현: today, week...
 -- * [x] 22.10.07: do_search(): ignorecase key search enabled: and search also
 -- * [x] 22.10.05: EDITOR 변수에 따라 do_edit()에서 처리하도록 설정
 -- * [x] 22.10.05: 코드 정리
@@ -18,21 +15,6 @@
 -- * [x] 22.10.04: do_list(): 기본 구현, 표시 방법 정리
 -- * [x] 22.10.04: do_search(): 한줄에서 두개의 다른 키워드가 검색될 경우 라인 중복 문제
 -- * [x] 22.10.04: help 수정
---
--- ## NOTICE
--- * 프로그램과 라이브러리는 모두 lib/* 이하에 존재한다.
--- * 실행스크립트만 bin/ 이하에 존재하여 환경변수와 함께 exec로 실행된다.
--- * 이것이 갖는 장점은 다음과 같다. (환경변수 MCONF, mlib.prefix(arg[0]) 활용)
--- * 1) 개발시
---      - lib/main.lua로 lib 디렉토리 내에서 개발하고 테스트 가능
--- * 2) 배포및 사용시
---      - setup.sh로 실행스크립트를 생성한다. bin/mconf
---      - 프로젝트 폴더 이름을 활용하여 MCONF prefix를 구할 수 있다.
---      - 이로서 bin을 PATH에 추가해주면 스크립트 bin/mconf를 어디서나 사용가능
---      - 사용자가 복잡하게 설정해 줄 필요없이  PATH만 잡아주면 된다.
--- * 다만 바이너리를 컴파일해서 사용할 경우에도 스크립트로 실행해야 한다.
--- * 바이너리 직접실행의 경우에는 쉘에서 환경변수를 잡고 설정파일도 만들어야 한다.
--- * 백업할 파일이 심볼릭 링크라면 업데이트 정보를 확인할 수 없다.
 
 --## Require
 
@@ -56,14 +38,13 @@ local version = '0.1'
 local function help()
   print('Usage: '..progname..' "strings"')
   print()
-  print('-a|add "strings"             add memo')
-  print('-d|delete id[s]              delete id[s]')
-  print('-e|edit id[s]                edit id[s]')
-  print('-l|list [d|dd|ddd|w|m|y|a]   list')
-  print('   d:today dd:yesterday ddd:day before yesterday')
-  print('   w:week m:month y:year a:all')
-  print('-s|search keyword[s]         keyword[s] search: and-search')
-  print('-v|view id[s]                view id[s]')
+  print('-a|add "strings"             -- add memo')
+  print('-d|delete id[s]              -- delete id[s]')
+  print('-e|edit id[s]                -- edit id[s]')
+  print('-l|list [d|w|m|y|a]          -- list')
+  print('   d:today w:week m:month y:year a:all')
+  print('-s|search keyword[s]         -- keyword[s] search: and-search')
+  print('-v|view id[s]                -- view id[s]')
 end
 
 -- 출력 마지막에 결과를 표시
@@ -226,17 +207,44 @@ local function do_edit(ids)
   end
 end
 
--- 리스트를 출력
+-- file is in date time
+local function is_intime(ftime, limit)
+  --ftime = 1665111863
+  if limit == 'day' then
+    if os.date('%y%m%d') == os.date('%y%m%d',ftime) then return true end
+  elseif limit == 'week' then
+    if os.date('%y%m%W') == os.date('%y%m%W',ftime) then return true end
+  elseif  limit == 'year' then
+    if os.date('%y%m') == os.date('%y%m',ftime) then return true end
+  elseif  limit == 'all' then
+    if os.date('%y') == os.date('%y',ftime) then return true end
+  else -- default: week
+    if os.date('%y%m%W') == os.date('%y%m%W',ftime) then return true end
+  end
+end
+
+-- list memo from data
 local function do_list(args)
   local tot = 0
-  local file = nil
-  local title = ''
+  -- set limit: default w(eek)
+  local limit = args[1] or 'w'
+  if args[1] == 'd' or args[1] == 'day' then limit = 'day'
+  elseif args[1] == 'w' or args[1] == 'week' then limit = 'week'
+  elseif args[1] == 'm' or args[1] == 'month' then limit = 'month'
+  elseif args[1] == 'y' or args[1] == 'year' then limit = 'year'
+  elseif args[1] == 'a' or args[1] == 'all' then limit = 'all'
+  else limit = 'week' end
+
+  -- loop file list
   for i,f in pairs(get_flist(PREFIX_DATA)) do
-    fileinfo(i,f)
-    tot = tot + 1
+    if is_intime(f,limit) then
+      fileinfo(i,f)
+      tot = tot + 1
+    end
   end
 
-  print_title('list', 'total:'..tot)
+  print_title('list', '['..limit..'] total:'..tot)
+  --print_title(string.format('list[%s]',limit
 end
 
 
@@ -318,16 +326,15 @@ end
 -- ## Main
 -------------------------------------------------------------------------
 
+-- receive opt, args from arg
+local opt, args = m.getopt()
+
 if #arg == 0 then
   do_add(args)
   os.exit()
 end
 
--- receive opt, args from arg
-opt, args = m.getopt()
-
-
--- execute function in case
+-- execute function by select option
 print()
 if opt == '-h' or opt == 'help' or opt == 'h' then
   help()
@@ -344,6 +351,10 @@ elseif opt == '-s' or opt == 'search' or opt == 's' then
 elseif opt == '-v' or opt == 'view' or opt == 'v' then
   do_view(args)
 else
-  help()
+  if tonumber(opt) then
+    do_view({opt})
+  else
+    help()
+  end
 end
 print()
