@@ -213,13 +213,15 @@ end
 local function is_intime(ftime, limit)
   --ftime = 1665111863
   if limit == 'day' then
-    if os.date('%y%m%d') == os.date('%y%m%d',ftime) then return true end
+    if os.date('%Y%m%d') == os.date('%Y%m%d',ftime) then return true end
   elseif limit == 'week' then
-    if os.date('%y%m%W') == os.date('%y%m%W',ftime) then return true end
+    if os.date('%Y%m%W') == os.date('%Y%m%W',ftime) then return true end
+  elseif limit == 'month' then
+    if os.date('%Y%m') == os.date('%Y%m',ftime) then return true end
   elseif  limit == 'year' then
-    if os.date('%y%m') == os.date('%y%m',ftime) then return true end
+    if os.date('%Y') == os.date('%Y',ftime) then return true end
   elseif  limit == 'all' then
-    if os.date('%y') == os.date('%y',ftime) then return true end
+    return true
   else -- default: week
     if os.date('%y%m%W') == os.date('%y%m%W',ftime) then return true end
   end
