@@ -1,8 +1,8 @@
-# lemo - Luajit Memo Console Program for quick note and search
+# lemo - Luajit Console Memo Program
 
 ## Intro
 
-* Quick note and search(ignorecase, multi keyword)
+* Quick note and search (ignorecase, multi keyword)
 * Small luajit script program
 * Linux base command line memo program
 * File based memo database system: `PREFIX/data/<time>`
@@ -37,9 +37,8 @@ Usage: lemo v0.1
 -a|add "strings"             -- add memo
 -d|delete id[s]              -- delete id[s]
 -e|edit id[s]                -- edit id[s]
--l|list [d|dd|ddd|w|m|y|a]   -- list
-   d:today dd:yesterday ddd:day before yesterday
-   w:week m:month y:year a:all
+-l|list [d|w|m|y|a]          -- list
+   d:today w:week m:month y:year a:all
 -s|search keyword[s]         -- keyword[s] search: and-search
 -v|view id[s]                -- view id[s]
 -h|help                      -- this help
@@ -60,7 +59,11 @@ $ lemo -a foo bar hello world
 
 * list memo
 ```console
-$ lemo -l
+$ lemo -l         # default: in this week
+$ lemo -l d(ay)   # in today
+$ lemo -l w(eek)  # in this week
+$ lemo -l m(onth) # in this month
+$ lemo -l y(ear)  # in this year
 ```
 
 * search memo
@@ -78,5 +81,5 @@ $ lemo -e 1  # edit id (vim is default editor)
 
 * Add mode: readlines support
 * Security: memo file encryption support
-* List mode: d, dd, etc options support
+* [x] 2022.10.07: List mode: d(ay), w(eek), m(onth), y(ear), a(ll) options added
 * [x] 2022.10.07:search mode: `ignorecase`, `and` search support
