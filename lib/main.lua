@@ -9,7 +9,7 @@
 -- * 메모파일 암호화: 아주 나중에... 
 -- * 구글드라이브에 올리기: 암호폴더에 백업하기
 -- * do_list(): 추가 옵션 기능 구현: today, yesterday...
--- * do_search(): 대소문자 구별없이 검색
+-- * [x] 22.10.07: do_search(): ignorecase key search enabled: and search also
 -- * [x] 22.10.05: EDITOR 변수에 따라 do_edit()에서 처리하도록 설정
 -- * [x] 22.10.05: 코드 정리
 -- * [x] 22.10.05: 깃허브에 올리기: 소스만 올리고 관리
@@ -157,9 +157,9 @@ local function do_add(args)
   local file = assert(io.open(PREFIX_DATA..'/'..fname,'a+'))
   if file:write(memo) then
     file:close()
-    print('-> add: '..fname..' is added!')
+    m.cprint('-> add: '..fname..' is added!')
   else
-    print('-> add: '..fname..' is failed!')
+    m.cprint('-> add: '..fname..' is failed!')
   end
 end
 
@@ -212,16 +212,16 @@ local function do_edit(ids)
         if i == id then
           match = match + 1
           assert(os.execute('nvim '..PREFIX_DATA..'/'..f))
-          print('--> edit: ',i,f)
+          m.cprint('-> add: '..i..' '..f..' is edited!')
         end
       end
       -- print id is not match in the list
       if match < 1 then
-        print('-> edit: "'..id..'" is not exists. check please!')
+        m.cprint('-> edit: "'..id..'" is not exists. check please!')
       end
     -- print id is not number
     else
-      print('-> edit: "'..id..'" is wrong id. check please!')
+      m.cprint('-> edit: "'..id..'" is wrong id. check please!')
     end
   end
 end
@@ -241,7 +241,6 @@ end
 
 
 -- 한 파일에 해당 키워드가 있는 라인을 테이블로 리턴
--- 해결과제: 대소문자 구별없이 검색시 라인 컬러표시 안됨
 local function match_lines(f, keys)
   local mlines = {}
   local ct = {}  -- count table for keys
@@ -253,11 +252,16 @@ local function match_lines(f, keys)
     local iskey = false
     for _,key in pairs(keys) do
       --if string.match(string.lower(line), string.lower(key)) then
-      if string.match(line, key) then
+      -- change the line to color: unchanged orginal keyword Case
+      for k in line:gmatch(m.ipattern(key)) do
+        -- if matched, iskey is true
         iskey = true
+        -- if matched, ct[key] is counted 1 more
         ct[key] = ct[key] + 1
-        line = string.gsub(line, key, m.cstr(key,'lyellow'))
+        -- change the line to color only : preserve the key case
+        line = string.gsub(line, k, m.cstr(k,'lyellow'))
       end
+      --end
     end
     -- check whether this line is suitable adding to mlines
     if iskey then table.insert(mlines, line) end

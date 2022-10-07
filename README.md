@@ -2,7 +2,7 @@
 
 ## Intro
 
-* Quick note and search
+* Quick note and search(ignorecase, multi keyword)
 * Small luajit script program
 * Linux base command line memo program
 * File based memo database system: `PREFIX/data/<time>`
@@ -30,6 +30,7 @@ $ lemo -h
 
 ## Usage
 
+* Usage
 ```console
 Usage: lemo v0.1
 
@@ -44,9 +45,38 @@ Usage: lemo v0.1
 -h|help                      -- this help
 ```
 
+* Add memo
+```console
+$ lemo
+foo
+bar
+^d(Control + d)
+
+$ lemo -a "foo
+bar"
+
+$ lemo -a foo bar hello world
+```
+
+* list memo
+```console
+$ lemo -l
+```
+
+* search memo
+```console
+$ lemo -s foo      # single keyword
+$ lemo -s foo bar  # search 'foo' and 'bar'
+```
+
+* edit memo
+```console
+$ lemo -e 1  # edit id (vim is default editor)
+```
+
 ## TODO
 
 * Add mode: readlines support
-* List mode: d, dd, etc options support
-* search mode: ignorecase support
 * Security: memo file encryption support
+* List mode: d, dd, etc options support
+* [x] 2022.10.07:search mode: `ignorecase`, `and` search support

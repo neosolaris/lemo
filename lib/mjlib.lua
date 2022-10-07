@@ -1,29 +1,30 @@
 -- Module Name: mjlib.lua - LuaJit only my lib
--- version: 220928
+-- version: 221007
 -- first version: 22094
 
 -- ## TODO
 -- * 최종목표: ffi만 로드하고 lfs_ffi도 mjlib 내에 포함시킨다.
 -- * 내부 함수 및 문서 정리: Document 생성 가능하도록 포멧을 정한다.
 -- * lfs_ffi 의존성을 조금씩 벗어나기
--- * flist(dir): listfiles(dir) 함수 대체용: lfs_ffi.lua 적용(luajit only)
+-- * [x] 221007: lib table name modify: mlib -> _M
+-- * [x] 221007: ipattern(): add: ignorecase pattern return 
+-- * [x] 221006: flist(dir): listfiles(dir) 함수 대체용: lfs_ffi.lua 적용(luajit only)
 -- * [x] 220928: gethostname(): ffi.c.gethostname()으로 전환
 -- * [x] 220928: mtime(): lfs_ffi로 전환: 실행속도 개선
 -- * [x] 220928: lfs_ffi.lua를 적용
 -- * [x] 220928: mlib.lua 에서 mjlib.lua로 분기
 
-local mlib = {}
-
 local ffi = require'ffi'
 local lfs = require'lfs_ffi'
 
+local _M = {}
 -----------------------------------------------------------
 --## 시스템 정보 관련 함수
 -----------------------------------------------------------
 
 -- gethostname()
 --[[
-function mlib.gethostname()
+function _M.gethostname()
     local f = assert(io.popen ("/bin/hostname"))
     local hostname = f:read("*a") or ""
     f:close()
@@ -32,8 +33,8 @@ function mlib.gethostname()
 end
 --]]
 
--- gethostname(): Using Luajit ffi
-function mlib.gethostname()
+-- get hostname: Using Luajit ffi
+function _M.gethostname()
   local n = 64
   local hostname = ffi.new('char[?]', n+1)
 
@@ -47,10 +48,47 @@ function mlib.gethostname()
 end
 
 -----------------------------------------------------------
+--## String 관련 함수
+-----------------------------------------------------------
+
+-- ignorecase code from stackoverflow
+--[[
+function case_insensitive_pattern(pattern)
+
+  -- find an optional '%' (group 1) followed by any character (group 2)
+  local p = pattern:gsub("(%%?)(.)", function(percent, letter)
+
+    if percent ~= "" or not letter:match("%a") then
+      -- if the '%' matched, or `letter` is not a letter, return "as is"
+      return percent .. letter
+    else
+      -- else, return a case-insensitive character class of the matched letter
+      return string.format("[%s%s]", letter:lower(), letter:upper())
+    end
+
+  end)
+
+  return p
+end
+
+print(case_insensitive_pattern("xyz = %d+ or %% end"))
+--]]
+
+-- ignorecase pattern return: hello -> [hH][eE][lL][lL][oO]
+function _M.ipattern(word)
+  local pattern = ''
+  for c in word:gmatch'.' do
+  pattern = pattern..'['..c:lower()..c:upper()..']'
+  end
+  return pattern
+end
+
+-----------------------------------------------------------
 --## 입력 관련 함수
 -----------------------------------------------------------
 
-function mlib.getopt()
+-- simple getopt: user input -> opt, args
+function _M.getopt()
   local opt = ''
   local args = {}
   for i,v in pairs(arg) do
@@ -65,19 +103,19 @@ end
 --## 출력 관련 함수
 -----------------------------------------------------------
 
--- vlog switch var
-mlib.VLOG = 0
+-- verbose switch level 
+_M.VLOG = 0
 
--- vlog(str,switch=1)
-function mlib.vlog(level, func, str)
+-- verbose log for debugging
+function _M.vlog(level, func, str)
   --level = tonumber(level) or 0
-  if mlib.VLOG >= level then
+  if _M.VLOG >= level then
     print('VLOG_'..level.. ' [ ' ..func.. ' ] ' ..str)
   end
 end
 
--- cstr(str, color) : color string
-function mlib.cstr(str, color)
+-- change string to color string
+function _M.cstr(str, color)
     color = color or 'lcyan'
     color_list = {
       lred='00;31',red='01;31', lgreen='00;32', green='01;32',
@@ -95,8 +133,8 @@ function mlib.cstr(str, color)
 end
 
 
--- cprint(text, color) : color print
-function mlib.cprint(text, color)
+-- color print line
+function _M.cprint(text, color)
     color = color or 'lcyan'
     color_list = {
       lred='00;31',red='01;31', lgreen='00;32', green='01;32',
@@ -117,34 +155,34 @@ end
 --## 파일 관련 함수
 -----------------------------------------------------------
 
--- extname(filename), '.ext', 'ext' are ok 
-function mlib.extname(filepath)
+-- get ext name from filepath: '.ext', 'ext' are ok 
+function _M.extname(filepath)
   if filepath then
     return string.gsub(filepath, "(.*%.)(.*)", "%2")
   end
 end
 
--- dirname(filepath): dirname return in filepath
-function mlib.dirname(filepath)
+-- dirname return in filepath
+function _M.dirname(filepath)
   if filepath then
     return string.gsub(filepath, "(.*)/(.*)", "%2")
   end
 end
 
--- basename(str), '.ext', 'ext' are ok 
-function mlib.basename(filepath, ext)
+-- get basename: '.ext', 'ext' are ok 
+function _M.basename(filepath, ext)
   local name = ''
   name = string.gsub(filepath, "(.*/)(.*)", "%2")
   if ext then
     -- check if 'ext' is '.ext' and remove '.'
-    ext = mlib.extname(ext)
+    ext = _M.extname(ext)
     name = string.gsub(name, '%.'.. ext, '')
   end
   return name
 end
 
--- getprefix(cmdpath): command full path in: /../../{lib|bin}/cmd.lua to /../..
-function mlib.prefix(cmdpath)
+-- command full path in: /../../{lib|bin}/cmd.lua to /../..
+function _M.prefix(cmdpath)
   if string.match(cmdpath, '^/') then
     return string.gsub(cmdpath, '/%a+/%a+%.lua','')
   else
@@ -152,8 +190,8 @@ function mlib.prefix(cmdpath)
   end
 end
 
--- fcp(src,des): file copy from src to des
-function mlib.fcp(src, des)
+-- file copy from src to des
+function _M.fcp(src, des)
   local infile = assert(io.open(src, 'r'))
   local instr = infile:read('*a')
   infile:close()
@@ -162,33 +200,35 @@ function mlib.fcp(src, des)
   outfile:close()
 end
 
--- readlines(filename): open, read filename and then return lines
-function mlib.readlines(filename)
+-- open, read filename and then return lines
+function _M.readlines(filename)
   return io.lines(filename)
 end
 
+--[[
 -- listfiles(dir): 디렉토리 내 파일리스트를 출력: 소트하고 테이블로 반환
-function mlib.listfiles(dir)
+function _M.listfiles(dir)
  --find .  -maxdepth 1 -print0
  local list = {}
  local files = assert(io.popen('find '..dir..' -type f'))
  --for f in files:lines() do print(f) end
    local fname = ''
    for f in files:lines() do
-     fname = mlib.basename(f)
+     fname = _M.basename(f)
      table.insert(list, fname)
    end
    table.sort(list)
  return list
 end
+--]]
 
--- listfiles(dir): 디렉토리 내 파일리스트를 출력: 소트하고 테이블로 반환
-function mlib.listfiles(dir)
+-- 디렉토리 내 파일리스트를 출력: 소트하고 테이블로 반환
+function _M.listfiles(dir)
   return lfs.dir(dir)
 end
 
 --- Check if a file or directory exists in this path
-function mlib.isfile(file)
+function _M.isfile(file)
  local ok, err, code = os.rename(file, file)
  if not ok then
     if code == 13 then
@@ -200,35 +240,37 @@ function mlib.isfile(file)
 end
 
 --- Check if a directory exists in this path
-function mlib.isdir(path)
+function _M.isdir(path)
    -- "/" works on both Unix and Windows
-   return mlib.isfile(path.."/")
+   return _M.isfile(path.."/")
 end
 
 -- mtime(file) : get modification time
 -- https://stackoverflow.com/questions/33296834/how-can-i-get-last-modified-timestamp-in-lua
 --[[
-function mlib.mtime(file)
+function _M.mtime(file)
 	local f = io.popen("stat -c %Y "..file)
 	local last_modified = f:read()
 	return last_modified
 end
 --]]
 
-function mlib.mtime(file)
+-- get modification time
+function _M.mtime(file)
   return assert(lfs.attributes(file).modification)
 end
 
-function mlib.ismodified(src, des)
-  --mlib.vlog(1, 'ismodified', mlib.mtime(src)..' '..mlib.mtime(des))
-  if mlib.mtime(src) > mlib.mtime(des) then
+-- check src file is modified 
+function _M.ismodified(src, des)
+  --_M.vlog(1, 'ismodified', _M.mtime(src)..' '.._M.mtime(des))
+  if _M.mtime(src) > _M.mtime(des) then
     return true
   end
 end
 
 -- remove dir include files : 내부에 폴더가 있는 경우 처리 못함
-function mlib.remove_dir(path)
-  if mlib.isdir(path) then
+function _M.remove_dir(path)
+  if _M.isdir(path) then
     for f in lfs.dir(path) do
       if f ~= '.' and f ~= '..' then
         f = path .. '/' .. f
@@ -246,9 +288,9 @@ end
 -----------------------------------------------------------
 
 -- get_gentime(gentime_file) : get generation time
-function mlib.get_gentime(gentime_file)
+function _M.get_gentime(gentime_file)
 	-- gentime_file check first
-	if not mlib.exists(gentime_file) then
+	if not _M.exists(gentime_file) then
     fd = io.open(gentime_file,"w")
     io.output(fd)
     io.write('1234567890')
@@ -264,11 +306,11 @@ function mlib.get_gentime(gentime_file)
 end
 
 -- put_gentime(gentime_file) : put generation time
-function mlib.put_gentime(gentime_file)
+function _M.put_gentime(gentime_file)
 	fd = io.open(gentime_file,"w")
 	io.output(fd)
 	io.write(os.date("%s"))
 	io.close(fd)
 end
 
-return mlib
+return _M
