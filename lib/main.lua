@@ -1,36 +1,31 @@
 #!/usr/bin/env luajit
 -- Luajit console memo program
--- update version: 0.1 (22-10-09)
+-- update version: 0.1.1 (22-10-10)
 -- first version: 0.1beta (22-10-05)
 
 -- ## TODO
 -- * 메모파일 암호화: 아주 나중에... 
--- * [x] 22.10.09: do_list() 일수 별 입력 추가: 1 3 4 5 0
--- * [x] 22.10.07: do_list(): 추가 옵션 기능 구현: today, week...
--- * [x] 22.10.07: do_search(): ignorecase key search enabled: and search also
--- * [x] 22.10.05: EDITOR 변수에 따라 do_edit()에서 처리하도록 설정
--- * [x] 22.10.05: 코드 정리
--- * [x] 22.10.05: 깃허브에 올리기: 소스만 올리고 관리
--- * [x] 22.10.05: fileinfo(): memo 한 줄 보여주기 함수 구현
--- * [x] 22.10.04: do_delete(): 기능 구현
--- * [x] 22.10.04: do_list(): 기본 구현, 표시 방법 정리
--- * [x] 22.10.04: do_search(): 한줄에서 두개의 다른 키워드가 검색될 경우 라인 중복 문제
--- * [x] 22.10.04: help 수정
+-- * 전체 메모 개수와 함께 파일 사이즈 및 기타 통계 출력: -i option
+-- * [x] 0.1.1: do_add() : lastid 확인해서 보여주기 추가
+-- * [x] 0.1.0: do_list() 일수 별 입력 추가: 1 3 4 5 0
+-- * [x] 0.1.0: do_list(): 추가 옵션 기능 구현: today, week...
+-- * [x] 0.1.0: do_search(): ignorecase key search enabled: and search also
+-- * [x] 0.1.beta: 최초 beta 버전 완성 및 업로드
 
 --## Require
 
 local m = require'mjlib'
 
 --## Var Set
-local HOSTNAME = m.gethostname()
 local PREFIX = os.getenv('MEMO')
 if not PREFIX then PREFIX = m.prefix(arg[0]) end
 local EDITOR = os.getenv('EDITOR')
 if not EDITOR then EDITOR = 'vim' end
 local PREFIX_DATA = PREFIX..'/data'
-local DBFILE = PREFIX_DATA..'/memo.db'
+--local HOSTNAME = m.gethostname()
+--local DBFILE = PREFIX_DATA..'/memo.db'
 local progname = m.basename(PREFIX)
-local version = '0.1'
+local version = '0.1.1'
 --print(MCONF, MCONF_DATA)
 
 -- LIMIT OF DAYS default
@@ -153,11 +148,15 @@ local function do_add(args)
     end
   end
   -- write memo to file
+  local lastid = 0  -- lastid number
   local fname = os.time()
   local file = assert(io.open(PREFIX_DATA..'/'..fname,'a+'))
   if file:write(memo) then
     file:close()
-    m.cprint('-> add: '..fname..' is added!')
+    -- get lastid from filelist
+    for _ in pairs(getflist(PREFIX_DATA)) do lastid=lastid+1 end
+    -- print add file info
+    m.cprint('-> add: ('..lastid..') '..fname..' is added!')
   else
     m.cprint('-> add: '..fname..' is failed!')
   end
@@ -313,7 +312,7 @@ local function do_list(args)
     end
   end
 
-  print_title('list', string.format('total=%d, limit=%d, yesterday=%d, today=%d', tot, tot_limit, tot_1day, tot_today))
+  print_title('list', string.format('total(%d), limit(%d), yesterday(%d), today(%d)', tot, tot_limit, tot_1day, tot_today))
   --print_title(string.format('list[%s]',limit
 end
 
@@ -363,7 +362,7 @@ local function do_search(keys)
     local lines = match_lines(PREFIX_DATA..'/'..f, keys)
     if lines then
       tot = tot + 1
-      m.cprint(string.format('%4d  %s %s', i, f, time2date(f)))
+      m.cprint(string.format('%d  %s %s', i, f, time2date(f)))
       for _, line in pairs(lines) do
         print('  '..line)
       end
