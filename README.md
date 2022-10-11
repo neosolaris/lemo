@@ -32,17 +32,18 @@ $ lemo -h
 
 * Usage
 ```console
-Usage: lemo v0.1
+Usage: lemo "strings"
 
--a|add "strings"             -- add memo
--d|delete id[s]              -- delete id[s]
--e|edit id[s]                -- edit id[s]
--l|list [d|w|m|y|a|(n)]          -- list
-   d:today w:week m:month y:year a:all
-   0:all, 1:in a day, 7:in a week
--s|search keyword[s]         -- keyword[s] search: and-search
--v|view id[s]                -- view id[s]
--h|help                      -- this help
+  -a|add "strings"             -- add memo
+  -d|delete id[s]              -- delete id[s]
+  -e|edit id[s]                -- edit id[s]
+  -x|export id[s]              -- same as -v, but pure output
+  -l|list [d|w|m|y|a]          -- list
+           d:today w:week m:month y:year a:all
+  -s|search keyword[s]         -- keyword[s] search: and-search
+  -v|view id[s]                -- view id[s]
+
+ lemo_0.1.2  help ﰲ Console Memo Powered by LuaJit
 ```
 
 * Add memo

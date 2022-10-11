@@ -1,11 +1,14 @@
 #!/usr/bin/env luajit
 -- Luajit console memo program
+-- update version: 0.1.2 (22-10-11)
 -- update version: 0.1.1 (22-10-10)
 -- first version: 0.1beta (22-10-05)
 
 -- ## TODO
 -- * 메모파일 암호화: 아주 나중에... 
 -- * 전체 메모 개수와 함께 파일 사이즈 및 기타 통계 출력: -i option
+-- * [x] 0.1.2: do_export(): 추가: 장식이나 정보없이 메모 내용만 출력
+-- * [x] 0.1.2: do_search(): 수정: 검색된 메모의 제목(첫줄)을 보여줌
 -- * [x] 0.1.1: do_add() : lastid 확인해서 보여주기 추가
 -- * [x] 0.1.0: do_list() 일수 별 입력 추가: 1 3 4 5 0
 -- * [x] 0.1.0: do_list(): 추가 옵션 기능 구현: today, week...
@@ -17,6 +20,7 @@
 local m = require'mjlib'
 
 --## Var Set
+local version = '0.1.2'
 local PREFIX = os.getenv('MEMO')
 if not PREFIX then PREFIX = m.prefix(arg[0]) end
 local EDITOR = os.getenv('EDITOR')
@@ -25,7 +29,6 @@ local PREFIX_DATA = PREFIX..'/data'
 --local HOSTNAME = m.gethostname()
 --local DBFILE = PREFIX_DATA..'/memo.db'
 local progname = m.basename(PREFIX)
-local version = '0.1.1'
 --print(MCONF, MCONF_DATA)
 
 -- LIMIT OF DAYS default
@@ -38,7 +41,7 @@ local COL_OTHER = 'lgray'
 
 --## under functions
 -- 출력 마지막에 결과를 표시
-local function print_title(title, sub)
+local function print_lastline(title, sub)
   if not sub then sub = '' end
   local icon = nil
   local t = string.lower(title)
@@ -67,17 +70,23 @@ local function print_title(title, sub)
   print(string.format('%s %s %s', lua, ptitle, mtitle))
 end
 
+-- do_function 내 결과 출력 함수
+local function print_info(fname, string)
+  m.cprint(string.format('-> %s: %s',fname, string))
+end
+
 -- help 도움말
 local function help()
   m.cprint('Usage: '..progname..' "strings"', 'lyellow')
   print('  -a|add "strings"             -- add memo')
   print('  -d|delete id[s]              -- delete id[s]')
   print('  -e|edit id[s]                -- edit id[s]')
+  print('  -x|export id[s]              -- same as -v, but pure output')
   print('  -l|list [d|w|m|y|a]          -- list')
   print('           d:today w:week m:month y:year a:all')
   print('  -s|search keyword[s]         -- keyword[s] search: and-search')
   print('  -v|view id[s]                -- view id[s]')
-  print_title('help','Console Memo Powered by LuaJit')
+  print_lastline('help','Console Memo Powered by LuaJit')
 end
 
 
@@ -156,9 +165,11 @@ local function do_add(args)
     -- get lastid from filelist
     for _ in pairs(getflist(PREFIX_DATA)) do lastid=lastid+1 end
     -- print add file info
-    m.cprint('-> add: ('..lastid..') '..fname..' is added!')
+    --m.cprint('-> add: ('..lastid..') '..fname..' is added!')
+    print_info('add', lastid..' is added!')
   else
-    m.cprint('-> add: '..fname..' is failed!')
+    --m.cprint('-> add: '..fname..' is failed!')
+    print_info('add', lastid..' is failed!')
   end
 end
 
@@ -181,13 +192,14 @@ local function do_delete(ids)
         local input = io.read()
         if input == 'y' or input == 'Y' then
           assert(os.remove(PREFIX_DATA..'/'..f))
-          m.cprint('-> deleted! '..i..' '..f, 'lred')
+          --m.cprint('-> deleted! '..i..' '..f, 'lred')
+          print_info('delete', i..' is deleted')
           dc = dc + 1
         end
       end
     end
   end
-  print_title('delete', 'total:'..dc)
+  print_lastline('delete', 'total:'..dc)
 end
 
 -- ids로 선택하여 파일을 편집
@@ -211,39 +223,22 @@ local function do_edit(ids)
         if i == id then
           match = match + 1
           assert(os.execute('nvim '..PREFIX_DATA..'/'..f))
-          m.cprint('-> add: '..i..' '..f..' is edited!')
+          --m.cprint('-> edit: '..i..' '..f..' is edited!')
+          print_info('edit', i..' is edited!')
         end
       end
       -- print id is not match in the list
       if match < 1 then
-        m.cprint('-> edit: "'..id..'" is not exists. check please!')
+        --m.cprint('-> edit: "'..id..'" is not exists. check please!')
+        print_info('edit', id..'" is not exists. check please!')
       end
     -- print id is not number
     else
-      m.cprint('-> edit: "'..id..'" is wrong id. check please!')
+      --m.cprint('-> edit: "'..id..'" is wrong id. check please!')
+      print_info('edit', id..'" is wrong id. check please!')
     end
   end
 end
-
--- file is in date time
---[[
-local function is_intime(ftime, limit)
-  --ftime = 1665111863
-  if limit == 'day' then
-    if os.date('%Y%m%d') == os.date('%Y%m%d',ftime) then return true end
-  elseif limit == 'week' then
-    if os.date('%Y%m%W') == os.date('%Y%m%W',ftime) then return true end
-  elseif limit == 'month' then
-    if os.date('%Y%m') == os.date('%Y%m',ftime) then return true end
-  elseif  limit == 'year' then
-    if os.date('%Y') == os.date('%Y',ftime) then return true end
-  elseif  limit == 'all' then
-    return true
-  else -- default: week
-    if os.date('%y%m%W') == os.date('%y%m%W',ftime) then return true end
-  end
-end
---]]
 
 -- file이 days 날수 이내라면 true 리턴: fitime, days are numbers
 local function is_intime(ftime, days)
@@ -312,8 +307,8 @@ local function do_list(args)
     end
   end
 
-  print_title('list', string.format('total(%d), limit(%d), yesterday(%d), today(%d)', tot, tot_limit, tot_1day, tot_today))
-  --print_title(string.format('list[%s]',limit
+  print_lastline('list', string.format('total(%d), limit(%d), yesterday(%d), today(%d)', tot, tot_limit, tot_1day, tot_today))
+  --print_lastline(string.format('list[%s]',limit
 end
 
 
@@ -362,7 +357,9 @@ local function do_search(keys)
     local lines = match_lines(PREFIX_DATA..'/'..f, keys)
     if lines then
       tot = tot + 1
-      m.cprint(string.format('%d  %s %s', i, f, time2date(f)))
+      --m.cprint(string.format('%d  %s %s', i, f, time2date(f)))
+      local fline = getfline(f) or ''
+      m.cprint(string.format('%4d  %s',i,fline))
       for _, line in pairs(lines) do
         print('  '..line)
       end
@@ -374,7 +371,7 @@ local function do_search(keys)
     if i == 1 then allkey = k
     else allkey = allkey..' & '..k end
   end
-  print_title('search', '['..allkey..'] total:'..tot)
+  print_lastline('search', '['..allkey..'] total:'..tot)
 end
 
 -- 메모 보기
@@ -386,15 +383,30 @@ local function do_view(ids)
     for i,f in pairs(getflist(PREFIX_DATA)) do
       if i == id then
         tot = tot + 1
-        m.cprint(string.format('%4d  %s %s', i, f, time2date(f)))
+        m.cprint(string.format('%d  %s %s', i, f, time2date(f)))
         for line in io.lines(PREFIX_DATA..'/'..f) do
           print('  '..line)
         end
       end
     end
   end
-  print_title('view', string.format('tot:'..tot))
+  print_lastline('view', string.format('tot:'..tot))
 end
+
+-- 장식없이 메모 그대로 보기
+local function do_export(ids)
+  for _,id in pairs(ids) do
+    id = tonumber(id)
+    for i,f in pairs(getflist(PREFIX_DATA)) do
+      if i == id then
+        for line in io.lines(PREFIX_DATA..'/'..f) do
+          print(line)
+        end
+      end
+    end
+  end
+end
+
 
 ---------------------------------------------------------------------------
 -- ## Main
@@ -418,6 +430,8 @@ elseif opt == '-d' or opt == 'delete' or opt == 'd' then
   do_delete(args)
 elseif opt == '-e' or opt == 'edit' or opt == 'e' then
   do_edit(args)
+elseif opt == '-x' or opt == 'export' or opt == 'x' then
+  do_export(args)
 elseif opt == '-l' or opt == 'list' or opt == 'l' then
   do_list(args)
 elseif opt == '-s' or opt == 'search' or opt == 's' then
