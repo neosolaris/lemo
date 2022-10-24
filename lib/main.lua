@@ -41,7 +41,7 @@ local COL_OTHER = 'lgray'
 
 --## under functions
 -- 출력 마지막에 결과를 표시
-local function print_lastline(title, sub)
+local function print_lastinfo(title, sub)
   if not sub then sub = '' end
   local icon = nil
   local t = string.lower(title)
@@ -86,7 +86,7 @@ local function help()
   print('           d:today w:week m:month y:year a:all')
   print('  -s|search keyword[s]         -- keyword[s] search: and-search')
   print('  -v|view id[s]                -- view id[s]')
-  print_lastline('help','Console Memo Powered by LuaJit')
+  print_lastinfo('help','Console Memo Powered by LuaJit')
 end
 
 
@@ -199,7 +199,7 @@ local function do_delete(ids)
       end
     end
   end
-  print_lastline('delete', 'total:'..dc)
+  print_lastinfo('delete', 'total:'..dc)
 end
 
 -- ids로 선택하여 파일을 편집
@@ -307,8 +307,8 @@ local function do_list(args)
     end
   end
 
-  print_lastline('list', string.format('total(%d), limit(%d), yesterday(%d), today(%d)', tot, tot_limit, tot_1day, tot_today))
-  --print_lastline(string.format('list[%s]',limit
+  print_lastinfo('list', string.format('total(%d), limit(%d), yesterday(%d), today(%d)', tot, tot_limit, tot_1day, tot_today))
+  --print_lastinfo(string.format('list[%s]',limit
 end
 
 
@@ -333,7 +333,6 @@ local function match_lines(f, keys)
         -- change the line to color only : preserve the key case
         line = string.gsub(line, k, m.cstr(k,'lyellow'))
       end
-      --end
     end
     -- check whether this line is suitable adding to mlines
     if iskey then table.insert(mlines, line) end
@@ -359,7 +358,8 @@ local function do_search(keys)
       tot = tot + 1
       --m.cprint(string.format('%d  %s %s', i, f, time2date(f)))
       local fline = getfline(f) or ''
-      m.cprint(string.format('%4d  %s',i,fline))
+      --m.cprint(string.format('%4d  %s',i,fline))
+      m.cprint(string.format('%d  %s',i,fline))
       for _, line in pairs(lines) do
         print('  '..line)
       end
@@ -371,7 +371,7 @@ local function do_search(keys)
     if i == 1 then allkey = k
     else allkey = allkey..' & '..k end
   end
-  print_lastline('search', '['..allkey..'] total:'..tot)
+  print_lastinfo('search', '['..allkey..'] total:'..tot)
 end
 
 -- 메모 보기
@@ -390,7 +390,7 @@ local function do_view(ids)
       end
     end
   end
-  print_lastline('view', string.format('tot:'..tot))
+  print_lastinfo('view', string.format('tot:'..tot))
 end
 
 -- 장식없이 메모 그대로 보기
