@@ -7,6 +7,9 @@
 -- ## TODO
 -- * 메모파일 암호화: 아주 나중에... 
 -- * 전체 메모 개수와 함께 파일 사이즈 및 기타 통계 출력: -i option
+-- * --fancy mode로 일반출력과 분리
+-- * --color mode로 일반출력과 분리
+-- * mjlib를 mlib로 바꾸기
 -- * [x] 0.1.2: do_export(): 추가: 장식이나 정보없이 메모 내용만 출력
 -- * [x] 0.1.2: do_search(): 수정: 검색된 메모의 제목(첫줄)을 보여줌
 -- * [x] 0.1.1: do_add() : lastid 확인해서 보여주기 추가
@@ -16,13 +19,21 @@
 -- * [x] 0.1.beta: 최초 beta 버전 완성 및 업로드
 
 --## Require
+local PREFIX = nil
+if arg[0] == './main.lua' or arg[0] == 'main.lua' then
+  PREFIX = os.getenv('PWD'):match('(.*)/.*')
+else
+  PREFIX = string.match(arg[0], '(.*)/lib/main.lua')
+end
 
+package.path = PREFIX .. '/lib/?.lua;'
 local m = require'mjlib'
 
 --## Var Set
 local version = '0.1.2'
-local PREFIX = os.getenv('MEMO')
-if not PREFIX then PREFIX = m.prefix(arg[0]) end
+--local PREFIX = os.getenv('MEMO')
+--if not PREFIX then PREFIX = m.prefix(arg[0]) end
+
 local EDITOR = os.getenv('EDITOR')
 if not EDITOR then EDITOR = 'vim' end
 local PREFIX_DATA = PREFIX..'/data'
@@ -32,7 +43,7 @@ local progname = m.basename(PREFIX)
 --print(MCONF, MCONF_DATA)
 
 -- LIMIT OF DAYS default
-local DAY_LIMIT = 3
+local DAY_LIMIT = 7
 -- COLOR SET OF DAYS
 local COL_TODAY = 'lred'
 local COL_INDAY = 'lpurple'
@@ -266,7 +277,7 @@ local function do_list(args)
   if #args == 0 then limit = DAY_LIMIT end
   --- check arg[1] is valid
   if not limit then
-    if args[1] == 'd' or args[1] == 'day' then limit = 1
+    if args[1] == 'd' or args[1] == 'today' then limit = 1
     elseif args[1] == 'w' or args[1] == 'week' then limit = 7
     elseif args[1] == 'm' or args[1] == 'month' then limit = 30
     elseif args[1] == 'y' or args[1] == 'year' then limit = 365
@@ -434,6 +445,8 @@ elseif opt == '-x' or opt == 'export' or opt == 'x' then
   do_export(args)
 elseif opt == '-l' or opt == 'list' or opt == 'l' then
   do_list(args)
+elseif opt == '-L'then
+  do_list({'all'})
 elseif opt == '-s' or opt == 'search' or opt == 's' then
   do_search(args)
 elseif opt == '-v' or opt == 'view' or opt == 'v' then
